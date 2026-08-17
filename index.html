@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อสอบปลายภาค - พื้นฐานเซนเซอร์ในงานอุตสาหกรรม</title>
+    <style>
+        /* ============================
+           CSS: Cyberpunk + Glassmorphism ฟ
+           ============================ */
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --bg-color: #050510;
+            --glass-bg: rgba(10, 10, 25, 0.6);
+            --glass-border: rgba(0, 243, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 243, 255, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(255, 0, 255, 0.08), transparent 25%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            
+            /* ป้องกันการคลุมดำข้อความเพื่อคัดลอก */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 10px rgba(255, 0, 255, 0.05);
+            position: relative;
+            z-index: 10;
+            margin: 40px 0;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Share Tech Mono', 'Sarabun', monospace;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .text-neon-blue { color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue); }
+        .text-neon-pink { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
+        
+        /* Dashboard Info Text */
+        .info-panel {
+            border-left: 4px solid var(--neon-pink);
+            padding-left: 15px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .info-panel p { margin-bottom: 5px; }
+
+        /* Inputs & Buttons */
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+            border-radius: 5px;
+            outline: none;
+            margin-bottom: 20px;
+            font-family: 'Share Tech Mono', 'Sarabun', monospace;
+            transition: box-shadow 0.3s ease;
+            
+            /* อนุญาตให้พิมพ์และเลือกข้อความในช่องกรอกชื่อได้ */
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            color: #fff;
+            border: 2px solid var(--neon-blue);
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Share Tech Mono', 'Sarabun', monospace;
+        }
+
+        button:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        button.btn-pink {
+            border-color: var(--neon-pink);
+        }
+
+        button.btn-pink:hover {
+            background: var(--neon-pink);
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        /* Exam Section */
+        #timer {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5rem;
+            color: var(--neon-pink);
+            text-align: right;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        .question-box {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--neon-blue);
+        }
+
+        .options-list {
+            list-style: none;
+        }
+
+        .option-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-item:hover {
+            border-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        .option-item.selected {
+            border-color: var(--neon-pink);
+            background: rgba(255, 0, 255, 0.1);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        /* Screens Management */
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Loader */
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--neon-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- =======================
+             SCREEN 1: Intro
+             ======================= -->
+        <div id="intro-screen" class="screen active">
+            <h1 class="text-neon-blue" style="margin-bottom: 20px;">SYSTEM // INITIATED</h1>
+            
+            <div class="info-panel">
+                <p><strong>วิทยาลัยสารพัดช่างศรีสะเกษ</strong></p>
+                <p>สำนักงานคณะกรรมการการอาชีวศึกษา กระทรวงศึกษาธิการ</p>
+                <p class="text-neon-pink">ต้นฉบับข้อสอบปลายภาค ภาคเรียนที่ 1/2569 รูปแบบออนไลน์ (QR-Code)</p>
+                <br>
+                <p><strong>รหัสวิชา:</strong> 20105-2022</p>
+                <p><strong>ชื่อวิชา:</strong> พื้นฐานเซนเซอร์ในงานอุตสาหกรรม ท-ป-น 1-4-3</p>
+                <p>นักศึกษาสาขาวิชา อิเล็กทรอนิกส์ ระดับชั้น ปวช.3 ทวิศึกษา</p>
+                <br>
+                <p><strong>ข้อสอบจำนวน:</strong> 40 ข้อ | <strong>คะแนนเต็ม:</strong> 40 คะแนน</p>
+                <p><strong>เวลา:</strong> 60 นาที</p>
+                <p><strong>ครูผู้ออกข้อสอบ:</strong> นายวิทยากร วรรณา</p>
+            </div>
+
+            <button onclick="showScreen('login-screen')">ถัดไป (NEXT) >></button>
+        </div>
+
+        <!-- =======================
+             SCREEN 2: Login / Name Input
+             ======================= -->
+        <div id="login-screen" class="screen">
+            <h2 class="text-neon-pink" style="margin-bottom: 20px;">USER // AUTHENTICATION</h2>
+            <p style="margin-bottom: 10px; color: #ccc;">กรุณากรอกชื่อ-นามสกุล ก่อนทำข้อสอบ</p>
+            <input type="text" id="studentName" placeholder="ระบุ ชื่อ-นามสกุล ของคุณที่นี่..." autocomplete="off">
+            <button class="btn-pink" onclick="startExam()">เริ่มทำข้อสอบ (START EXAM)</button>
+        </div>
+
+        <!-- =======================
+             SCREEN 3: Exam
+             ======================= -->
+        <div id="exam-screen" class="screen">
+            <div id="timer">00:00</div>
+            <h3 class="text-neon-blue" id="question-progress" style="text-align: left; margin-bottom: 10px;">Q: 1/40</h3>
+            
+            <div class="question-box" id="question-text">
+                <!-- คำถามจะถูกโหลดมาแสดงที่นี่ -->
+            </div>
+            
+            <ul class="options-list" id="options-container">
+                <!-- ตัวเลือกจะถูกโหลดมาแสดงที่นี่ -->
+            </ul>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="btn-next" onclick="nextQuestion()">ข้อถัดไป (NEXT)</button>
+                <button id="btn-submit" class="btn-pink" style="display: none;" onclick="submitExam()">ส่งคำตอบ (SUBMIT)</button>
+            </div>
+        </div>
+
+        <!-- =======================
+             SCREEN 4: Result & Saving
+             ======================= -->
+        <div id="result-screen" class="screen">
+            <h1 class="text-neon-blue">EXAM // COMPLETE</h1>
+            <div id="score-display" style="font-size: 2rem; text-align: center; margin: 20px 0; line-height: 1.5; text-shadow: 0 0 15px var(--neon-blue);"></div>
+            
+            <div id="saving-status" style="text-align: center;">
+                <div class="loader"></div>
+                <p class="text-neon-pink">กำลังอัปโหลดข้อมูลเข้าสู่ระบบ...</p>
+            </div>
+            
+            <div id="success-message" style="display: none; text-align: center; color: #0f0;">
+                <p>บันทึกข้อมูลเสร็จสมบูรณ์ ขอบคุณที่เข้าร่วมการทดสอบ</p>
+            </div>
+            <div id="error-message" style="display: none; text-align: center; color: #f00;">
+                <p>เกิดข้อผิดพลาดในการบันทึกข้อมูล โปรดแจ้งผู้คุมสอบ</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ============================
+           JAVASCRIPT LOGIC
+           ============================ */
+
+        // 1. URL สำหรับส่งข้อมูลไปยัง Google Apps Script (อัปเดตตามที่ระบุ)
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyWNpEYOvQ7lS329v5ybpWYc0TXBoS5tw4mL-qVNMk8HgqSHmadusV3jGPPIn-Jz82f/exec";
+
+        // 2. ข้อมูลข้อสอบวิชา พื้นฐานเซนเซอร์ในงานอุตสาหกรรม (40 ข้อ)
+        const rawQuestions = [
+            { q: "เซนเซอร์ (Sensor) มีหน้าที่หลักอย่างไรในระบบอุตสาหกรรม", options: ["ตรวจจับและแปลงสภาพแวดล้อมทางกายภาพให้เป็นสัญญาณไฟฟ้า", "ประมวลผลคำสั่งเพื่อควบคุมมอเตอร์ไฟฟ้า", "แสดงผลข้อมูลเป็นตัวเลขบนหน้าจอ", "จ่ายพลังงานไฟฟ้าให้กับเครื่องจักร"], ans: 0 },
+            { q: "ข้อใดคือความหมายที่ถูกต้องที่สุดของทรานสดิวเซอร์ (Transducer)", options: ["อุปกรณ์ที่ใช้ลดแรงดันไฟฟ้าในวงจร", "อุปกรณ์ที่แปลงพลังงานรูปแบบหนึ่งไปเป็นพลังงานอีกรูปแบบหนึ่ง", "อุปกรณ์ที่ทำหน้าที่ตัดต่อวงจรไฟฟ้าเมื่อเกิดการลัดวงจร", "อุปกรณ์ที่ใช้ขยายสัญญาณทางไฟฟ้าให้แรงขึ้น"], ans: 1 },
+            { q: "เซนเซอร์ประเภทอินดักทีฟ (Inductive Proximity Sensor) เหมาะสำหรับใช้ตรวจจับวัตถุชนิดใด", options: ["พลาสติกและยาง", "น้ำและของเหลวต่างๆ", "โลหะทุกชนิด", "ไม้และกระดาษ"], ans: 2 },
+            { q: "หลักการทำงานของอินดักทีฟเซนเซอร์ (Inductive Proximity Sensor) อาศัยการเปลี่ยนแปลงของสิ่งใด", options: ["ความต้านทานไฟฟ้า", "ความจุไฟฟ้า", "สนามแม่เหล็กไฟฟ้าความถี่สูง", "ความเข้มของแสง"], ans: 2 },
+            { q: "หากต้องการตรวจจับระดับน้ำในขวดพลาสติกทึบแสง ควรเลือกใช้เซนเซอร์ชนิดใดจึงจะเหมาะสมที่สุด", options: ["Inductive Proximity Sensor", "Capacitive Proximity Sensor", "Magnetic Proximity Sensor", "Thermocouple"], ans: 1 },
+            { q: "คาปาซิทีฟเซนเซอร์ (Capacitive Proximity Sensor) สามารถตรวจจับวัตถุประเภทใดได้บ้าง", options: ["เฉพาะวัตถุที่เป็นเหล็กและอะลูมิเนียมเท่านั้น", "เฉพาะวัตถุที่มีความโปร่งใสเท่านั้น", "ตรวจจับได้ทั้งวัตถุที่เป็นโลหะและอโลหะ", "เฉพาะวัตถุที่มีคุณสมบัติเป็นแม่เหล็กเท่านั้น"], ans: 2 },
+            { q: "รีดสวิตช์ (Reed Switch) เป็นเซนเซอร์ที่ทำงานเมื่อได้รับอิทธิพลจากสิ่งใด", options: ["ความร้อน", "สนามแม่เหล็ก", "แสงสว่าง", "ความดันก๊าซ"], ans: 1 },
+            { q: "โฟโตอิเล็กทริกเซนเซอร์แบบใดที่มีระยะการตรวจจับไกลที่สุดและมีความแม่นยำสูง", options: ["แบบตัวรับและตัวส่งแยกกัน (Through-beam)", "แบบสะท้อนกับแผ่นสะท้อนแสง (Retro-reflective)", "แบบสะท้อนกับวัตถุโดยตรง (Diffuse-reflective)", "แบบตรวจจับสี (Color Mark Sensor)"], ans: 0 },
+            { q: "โฟโตอิเล็กทริกเซนเซอร์แบบ Retro-reflective จำเป็นต้องใช้อุปกรณ์ใดร่วมด้วยในการทำงาน", options: ["แผ่นสะท้อนแสง (Reflector)", "แม่เหล็กถาวร (Permanent Magnet)", "แผ่นโลหะ (Metal Target)", "เครื่องกำเนิดความถี่ (Frequency Generator)"], ans: 0 },
+            { q: "เซนเซอร์แสงแบบสะท้อนกับวัตถุโดยตรง (Diffuse-reflective) มีจุดอ่อนในเรื่องใดมากที่สุด", options: ["ไม่สามารถตรวจจับโลหะได้", "สีและพื้นผิวของวัตถุมีผลต่อระยะการตรวจจับ", "ต้องเดินสายไฟทั้งสองฝั่งทำให้ติดตั้งยาก", "อายุการใช้งานสั้นกว่าแบบอื่น"], ans: 1 },
+            { q: "เทอร์โมคัปเปิล (Thermocouple) ทำงานโดยอาศัยหลักการใด", options: ["ความต้านทานเปลี่ยนไปตามอุณหภูมิที่เปลี่ยนไป", "การขยายตัวของของเหลวในหลอดแก้ว", "โลหะสองชนิดที่ต่างกันเชื่อมติดกัน เมื่อได้รับความร้อนบริเวณจุดเชื่อมต่อจะเกิดแรงดันไฟฟ้า", "การแผ่รังสีอินฟราเรดจากวัตถุที่ร้อน"], ans: 2 },
+            { q: "เทอร์โมคัปเปิล Type K เป็นที่นิยมใช้งานมากที่สุด ทำจากโลหะผสมชนิดใด", options: ["เหล็ก และ คอนสแตนแตน", "โครเมล และ อะลูเมล", "ทองแดง และ คอนสแตนแตน", "แพลตินัม และ โรเดียม"], ans: 1 },
+            { q: "RTD (Resistance Temperature Detector) ชนิด Pt100 ที่อุณหภูมิ 0 องศาเซลเซียส จะมีค่าความต้านทานเท่าใด", options: ["0 โอห์ม", "100 โอห์ม", "1,000 โอห์ม", "10 กิโลโอห์ม"], ans: 1 },
+            { q: "ข้อดีของเซนเซอร์วัดอุณหภูมิแบบ RTD เมื่อเปรียบเทียบกับเทอร์โมคัปเปิลคือข้อใด", options: ["ราคาถูกกว่ามาก", "ทนอุณหภูมิได้สูงกว่าเทอร์โมคัปเปิล", "มีความแม่นยำและมีเสถียรภาพในการวัดสูงกว่า", "สามารถวัดอุณหภูมิได้โดยไม่ต้องสัมผัสวัตถุ"], ans: 2 },
+            { q: "เทอร์มิสเตอร์แบบ NTC (Negative Temperature Coefficient) มีคุณสมบัติตามข้อใด", options: ["เมื่ออุณหภูมิสูงขึ้น ค่าความต้านทานจะลดลง", "เมื่ออุณหภูมิสูงขึ้น ค่าความต้านทานจะสูงขึ้น", "เมื่ออุณหภูมิสูงขึ้น แรงดันไฟฟ้าจะลดลง", "ค่าความต้านทานคงที่ตลอดช่วงอุณหภูมิ"], ans: 0 },
+            { q: "อัลตราโซนิกเซนเซอร์ (Ultrasonic Sensor) ใช้คลื่นชนิดใดในการตรวจจับวัตถุหรือวัดระยะทาง", options: ["คลื่นแสงความถี่สูง", "คลื่นแม่เหล็กไฟฟ้า", "คลื่นเสียงความถี่สูง", "คลื่นวิทยุ"], ans: 2 },
+            { q: "ข้อใดคือข้อจำกัดที่สำคัญของอัลตราโซนิกเซนเซอร์", options: ["ไม่สามารถตรวจจับวัตถุที่เป็นของเหลวได้", "ไม่สามารถทำงานได้ในบริเวณที่เป็นสุญญากาศ", "อายุการใช้งานสั้นเมื่ออยู่ในที่มืด", "ตรวจจับได้เฉพาะวัตถุที่มีสีดำเท่านั้น"], ans: 1 },
+            { q: "สเตรนเกจ (Strain Gauge) นิยมนำมาประยุกต์ใช้ในการสร้างอุปกรณ์ประเภทใดมากที่สุด", options: ["เซนเซอร์วัดอุณหภูมิ (Temperature Sensor)", "เซนเซอร์วัดความสว่าง (Light Sensor)", "โหลดเซลล์สำหรับชั่งน้ำหนักและวัดแรง (Load Cell)", "เซนเซอร์วัดระดับน้ำ (Level Sensor)"], ans: 2 },
+            { q: "โรตารีเอนโค้ดเดอร์ (Rotary Encoder) เป็นเซนเซอร์ที่ใช้สำหรับวัดค่าอะไรในงานอุตสาหกรรม", options: ["วัดอุณหภูมิสะสมของแกนมอเตอร์", "วัดความเร็วรอบ ตำแหน่ง และทิศทางการหมุนของเพลา", "วัดอัตราการไหลของน้ำในท่อกลม", "วัดความต้านทานที่เปลี่ยนไปของขดลวดมอเตอร์"], ans: 1 },
+            { q: "ความแตกต่างหลักระหว่าง Incremental Encoder และ Absolute Encoder คืออะไร", options: ["Incremental วัดความเร็วได้แม่นยำกว่า Absolute", "Absolute จะจำตำแหน่งได้แม้ไฟดับ แต่ Incremental จะสูญเสียตำแหน่งเมื่อไฟดับ", "Incremental มีราคาแพงกว่า Absolute มาก", "Absolute ใช้แสงในการตรวจจับ ส่วน Incremental ใช้สนามแม่เหล็ก"], ans: 1 },
+            { q: "โฟลว์เซนเซอร์ (Flow Sensor) มีหน้าที่หลักในการวัดปริมาณใดในกระบวนการผลิต", options: ["ความดันของก๊าซในถังปิด", "ความเร็วรอบของใบพัดกวนผสม", "อัตราการไหลของของเหลวหรือก๊าซที่ไหลผ่านท่อ", "ระดับความสูงของของเหลวในบ่อพัก"], ans: 2 },
+            { q: "วิชันเซนเซอร์ (Vision Sensor / Machine Vision) อาศัยอุปกรณ์ใดเป็นหลักในการรับข้อมูลเพื่อนำมาประมวลผล", options: ["ไมโครโฟนรับเสียงกระแทก", "เลเซอร์สแกนเนอร์", "กล้องถ่ายภาพ (Camera)", "เซนเซอร์วัดความชื้น"], ans: 2 },
+            { q: "พร็อกซิมิตีเซนเซอร์แบบ NPN เมื่อตรวจจับวัตถุได้ จะจ่ายสัญญาณเอาต์พุต (Output) เป็นลักษณะใด", options: ["จ่ายไฟบวก (+Vcc)", "จ่ายไฟลบ (0V หรือ Ground)", "จ่ายสัญญาณความถี่สูงออกมา", "วงจรจะเปิด (Open Circuit) ไม่มีการจ่ายไฟใดๆ"], ans: 1 },
+            { q: "พร็อกซิมิตีเซนเซอร์แบบ PNP มักถูกเรียกว่าเป็นเซนเซอร์แบบใดในระบบการต่อวงจร", options: ["Sinking Sensor", "Sourcing Sensor", "Analog Sensor", "Relay Sensor"], ans: 1 },
+            { q: "สายไฟของเซนเซอร์มาตรฐานแบบ 3 สาย (3-wire Sensor) สีน้ำตาล (Brown) และสีน้ำเงิน (Blue) ตามลำดับ ใช้ต่อเข้ากับขั้วใด", options: ["สีน้ำตาลต่อไฟบวก (+) / สีน้ำเงินต่อไฟลบ (-)", "สีน้ำตาลต่อไฟลบ (-) / สีน้ำเงินต่อไฟบวก (+)", "สีน้ำตาลต่อสัญญาณเอาต์พุต / สีน้ำเงินต่อไฟลบ (-)", "สีน้ำตาลต่อสัญญาณเอาต์พุต / สีน้ำเงินต่อไฟบวก (+)"], ans: 0 },
+            { q: "ในเซนเซอร์มาตรฐานแบบ 3 สาย (3-wire Sensor) สายไฟสีดำ (Black) ทำหน้าที่อะไร", options: ["ไฟเลี้ยงขั้วบวก", "ไฟเลี้ยงขั้วลบ", "สายสัญญาณเอาต์พุต (Output)", "สายกราวด์สำหรับกันสัญญาณรบกวน (Shield)"], ans: 2 },
+            { q: "สถานะหน้าสัมผัสปกติเปิด (Normally Open : NO) ของเซนเซอร์ หมายความว่าอย่างไร", options: ["เมื่อยังไม่พบวัตถุ จะมีสัญญาณเอาต์พุตส่งออกมา", "เมื่อพบวัตถุ จึงจะมีสัญญาณเอาต์พุตส่งออกมา", "จะให้สัญญาณเอาต์พุตเมื่อแรงดันไฟฟ้าเกินกำหนด", "เซนเซอร์ทำงานผิดปกติและวงจรเปิดออก"], ans: 1 },
+            { q: "หากต้องการนำเซนเซอร์ไปใช้ในระบบป้องกันอันตราย (Safety Interlock) ของเครื่องจักร ควรเลือกใช้หน้าสัมผัสแบบใดเป็นหลักเพื่อความปลอดภัย (สายไฟขาดเครื่องต้องหยุดทำงานทันที)", options: ["Normally Open (NO)", "Normally Closed (NC)", "สลับกันระหว่าง NO และ NC", "แบบใดก็ได้มีค่าเท่ากัน"], ans: 1 },
+            { q: "ลิมิตสวิตช์ (Limit Switch) เป็นเซนเซอร์ที่ทำงานโดยอาศัยหลักการใด", options: ["ใช้แสงในการตรวจจับวัตถุ", "ใช้คลื่นเสียงความถี่สูงสะท้อนกลับ", "ใช้การสัมผัสทางกล (Mechanical contact) เมื่อวัตถุมากดหรือชน", "ใช้สนามแม่เหล็กในการดึงดูดหน้าสัมผัส"], ans: 2 },
+            { q: "เซนเซอร์ที่ให้สัญญาณเอาต์พุตแบบอนาล็อก (Analog Output) ที่นิยมใช้อย่างแพร่หลายในมาตรฐานอุตสาหกรรม (PLC) มีค่าสัญญาณอยู่ในช่วงใด", options: ["0 ถึง 5 โวลต์ หรือ 1 ถึง 10 มิลลิแอมป์", "0 ถึง 10 โวลต์ หรือ 4 ถึง 20 มิลลิแอมป์", "-12 ถึง +12 โวลต์", "24 ถึง 220 โวลต์"], ans: 1 },
+            { q: "คำว่า \"ฮิสเทรีซีส (Hysteresis)\" ในสเปคของพร็อกซิมิตีเซนเซอร์ หมายถึงอะไร", options: ["เวลาที่เซนเซอร์ใช้ในการประมวลผลสัญญาณ", "ระยะห่างระหว่างจุดที่เซนเซอร์เริ่มตรวจจับได้ (ON) กับจุดที่หยุดตรวจจับ (OFF) เมื่อวัตถุถอยห่างออกไป", "อุณหภูมิสูงสุดที่เซนเซอร์สามารถทำงานได้โดยไม่เสียหาย", "ค่าความคลาดเคลื่อนของแรงดันไฟฟ้าจากแหล่งจ่าย"], ans: 1 },
+            { q: "มาตรฐาน IP67 ที่ระบุบนตัวเซนเซอร์ ตัวเลข \"6\" ในตำแหน่งแรก มีความหมายว่าอย่างไร", options: ["สามารถป้องกันน้ำฉีดแรงดันสูงได้", "สามารถจมน้ำได้ลึก 1 เมตร เป็นเวลา 30 นาที", "สามารถป้องกันฝุ่นละอองเข้าภายในได้อย่างสมบูรณ์", "สามารถทนต่อแรงกระแทกได้ 6 จูล"], ans: 2 },
+            { q: "คัลเลอร์มาร์กเซนเซอร์ (Color Mark Sensor) อาศัยความแตกต่างของสิ่งใดในการตรวจจับแถบสีบนบรรจุภัณฑ์", options: ["ความร้อนที่สะท้อนกลับมา", "ปริมาณความเข้มของแสงที่สะท้อนกลับมาจากสีที่แตกต่างกัน", "ความหนาของแผ่นสกรีนสี", "การเกิดคลื่นแม่เหล็กไฟฟ้าของเม็ดสี"], ans: 1 },
+            { q: "สวิตช์ลูกลอย (Float Switch) เป็นอุปกรณ์ที่นิยมใช้ตรวจจับอะไรในระบบอุตสาหกรรม", options: ["อัตราการไหลของน้ำเสีย", "ระดับความสูงของของเหลวในบ่อพักหรือในถัง", "ความดันของไอน้ำในหม้อไอน้ำ", "อุณหภูมิของน้ำหล่อเย็น"], ans: 1 },
+            { q: "เครื่องจักรนับจำนวนกระป๋องเหล็กที่วิ่งบนสายพาน ควรเลือกใช้เซนเซอร์ชนิดใดจึงจะมีความทนทานและเหมาะสมที่สุด", options: ["Inductive Proximity Sensor", "Ultrasonic Sensor", "Vision Sensor", "Thermocouple"], ans: 0 },
+            { q: "เวลาตอบสนอง (Response Time) ของเซนเซอร์มีความสำคัญอย่างไรในระบบอัตโนมัติที่ทำงานด้วยความเร็วสูง", options: ["ช่วยลดการใช้พลังงานไฟฟ้าของตัวเซนเซอร์", "ทำให้เซนเซอร์ทนต่อความร้อนได้ดีขึ้น", "ส่งผลต่อความแม่นยำในการตรวจจับวัตถุที่เคลื่อนที่ผ่านหน้าเซนเซอร์อย่างรวดเร็ว", "ทำให้สายไฟสัญญาณมีอายุการใช้งานยาวนานขึ้น"], ans: 2 },
+            { q: "LVDT (Linear Variable Differential Transformer) เป็นเซนเซอร์ที่ออกแบบมาเพื่อใช้วัดค่าอะไร", options: ["อุณหภูมิภายในเตาอบความร้อนสูง", "ระยะการกระจัดหรือตำแหน่งการเคลื่อนที่ในแนวเส้นตรงอย่างละเอียด", "ความสว่างของแสงในพื้นที่ทำงาน", "ระดับความเข้มข้นของสารเคมี"], ans: 1 },
+            { q: "pH Sensor ในอุตสาหกรรมอาหาร การเกษตร หรือระบบบำบัดน้ำเสีย ทำหน้าที่วัดค่าอะไร", options: ["ความหวานของเครื่องดื่ม", "ความหนืดของของเหลว", "ความเป็นกรด-ด่างของของเหลว", "ปริมาณออกซิเจนที่ละลายในน้ำ"], ans: 2 },
+            { q: "โหลดเซลล์ (Load Cell) ส่วนใหญ่จะแปลงแรงกดหรือแรงดึงทางกลให้เป็นสัญญาณไฟฟ้า โดยอาศัยการเปลี่ยนแปลงค่าใดภายในอุปกรณ์", options: ["ค่าความจุไฟฟ้า (Capacitance)", "ค่าความต้านทานไฟฟ้า (Resistance) ของสเตรนเกจ", "ค่าความเหนี่ยวนำไฟฟ้า (Inductance)", "ความถี่คลื่นอัลตราโซนิก (Ultrasonic Frequency)"], ans: 1 },
+            { q: "การคาลิเบรต (Calibration) เซนเซอร์หรืออุปกรณ์เครื่องมือวัด หมายถึงกระบวนการใด", options: ["การทำความสะอาดเลนส์และตัวเรือนเพื่อไม่ให้เกิดความสกปรก", "การสอบเทียบและการปรับตั้งค่าของเซนเซอร์ให้มีความแม่นยำตรงตามมาตรฐานอ้างอิง", "การเปลี่ยนเซนเซอร์ตัวใหม่ทดแทนตัวเก่าที่เสื่อมสภาพ", "การเดินสายไฟใหม่ทั้งหมดเพื่อป้องกันสัญญาณรบกวน"], ans: 1 }
+        ];
+
+        let questions = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = [];
+        let studentName = "";
+        
+        // ตัวแปรระบบป้องกันการทุจริต
+        let isExamActive = false;
+        let cheatDeductions = 0;
+        let cheatCooldown = false;
+
+        // ตัวแปรจับเวลา (60 นาที = 3600 วินาที)
+        let timeRemaining = 60 * 60;
+        let timerInterval;
+
+        // ฟังก์ชันสำหรับสุ่มตำแหน่งสมาชิกใน Array (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // ฟังก์ชันเตรียมข้อมูลข้อสอบ (สุ่มข้อสอบ และ สุ่มตัวเลือก)
+        function prepareExamQuestions() {
+            let prepared = JSON.parse(JSON.stringify(rawQuestions));
+
+            prepared.forEach(q => {
+                let optionsWithFlag = q.options.map((optText, index) => ({
+                    text: optText,
+                    isCorrect: index === q.ans
+                }));
+
+                shuffleArray(optionsWithFlag);
+
+                q.options = optionsWithFlag.map(item => item.text);
+                q.ans = optionsWithFlag.findIndex(item => item.isCorrect);
+            });
+
+            shuffleArray(prepared);
+            return prepared;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startExam() {
+            const nameInput = document.getElementById('studentName').value.trim();
+            if (nameInput === "") {
+                alert("ACCESS DENIED: กรุณากรอกชื่อ-นามสกุล ก่อนเริ่มทำข้อสอบครับ");
+                return;
+            }
+            studentName = nameInput;
+
+            alert("⚠️ กฎกติกาและการป้องกันการทุจริต ⚠️\n\n1. ห้ามออกจากหน้าจอ หรือสลับไปแท็บ/โปรแกรมอื่น\n2. ห้ามคัดลอกข้อความใดๆ\n3. ห้ามบันทึกภาพหน้าจอ (Screen Capture / PrintScreen)\n\n*** หากฝ่าฝืน ระบบจะเตือนและ 'หักคะแนน 1 คะแนน' ต่อการทำผิด 1 ครั้งทันที ***\n\nกด OK เพื่อเริ่มการทดสอบ");
+
+            questions = prepareExamQuestions();
+            userAnswers = new Array(questions.length).fill(null);
+            currentQuestion = 0;
+            cheatDeductions = 0;
+
+            showScreen('exam-screen');
+            loadQuestion(currentQuestion);
+            
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // การแก้ไขบั๊ก: หน่วงเวลา 1 วินาทีก่อนที่จะเปิดระบบแจ้งเตือนทุจริต 
+            // เพื่อป้องกันบั๊กที่เกิดจากเว็บบราวเซอร์เสียโฟกัสตอนกดปิดหน้าต่างแจ้งเตือน Alert
+            setTimeout(() => {
+                isExamActive = true;
+            }, 1000);
+        }
+
+        // ==========================================
+        // ระบบตรวจจับการทุจริต (Anti-Cheating System)
+        // ==========================================
+        function handleCheating(reason) {
+            if (!isExamActive || cheatCooldown) return;
+            
+            cheatCooldown = true;
+            cheatDeductions++; // หัก 1 คะแนน
+            
+            alert(`🚨 ตรวจพบการทุจริต: ${reason}\n\nคุณถูกหัก 1 คะแนน!\n(โดนหักคะแนนสะสมไปแล้ว ${cheatDeductions} คะแนน)`);
+            
+            setTimeout(() => { cheatCooldown = false; }, 1000);
+        }
+
+        // 1. ดักจับการสลับแท็บเบราว์เซอร์
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                handleCheating("ออกจากหน้าจอข้อสอบ (เปลี่ยนแท็บ)");
+            }
+        });
+
+        // 2. ดักจับการสลับไปเปิดโปรแกรมอื่น หรือย่อหน้าต่างเบราว์เซอร์
+        window.addEventListener("blur", () => {
+            handleCheating("สลับไปหน้าต่างหรือโปรแกรมอื่น");
+        });
+
+        // 3. ดักจับการคัดลอกข้อความ
+        document.addEventListener("copy", (e) => {
+            handleCheating("พยายามคัดลอกข้อความ");
+            e.preventDefault();
+        });
+
+        // 4. ป้องกันการคลิกขวา
+        document.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+        });
+
+        // 5. ดักจับการกดปุ่ม PrintScreen (ล้างข้อมูล Clipboard ร่วมด้วย)
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "PrintScreen") {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(""); // ล้าง Clipboard เพื่อไม่ให้วางรูปได้
+                }
+                handleCheating("พยายามบันทึกภาพหน้าจอ (PrintScreen)");
+            }
+        });
+
+        // 6. ดักจับคีย์ลัด Ctrl+C, PrintScreen และคีย์ลัด Screenshot ต่างๆ
+        window.addEventListener("keydown", (e) => {
+            // ดักจับ Ctrl+C / Cmd+C
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+                handleCheating("พยายามคัดลอกข้อความโดยใช้คีย์ลัด");
+                e.preventDefault();
+            }
+
+            // ดักจับปุ่ม PrintScreen ในจังหวะ Down
+            if (e.key === "PrintScreen") {
+                handleCheating("พยายามบันทึกภาพหน้าจอ (PrintScreen)");
+                e.preventDefault();
+            }
+
+            // ดักจับคีย์ลัดแค็ปหน้าจอ: Win+Shift+S, Cmd+Shift+3/4/5 หรือ Ctrl+Shift+S
+            if ((e.key === 'S' || e.key === 's' || e.key === '3' || e.key === '4' || e.key === '5') && 
+                (e.shiftKey && (e.metaKey || e.ctrlKey))) {
+                handleCheating("พยายามใช้คีย์ลัดบันทึกภาพหน้าจอ");
+                e.preventDefault();
+            }
+        });
+        // ==========================================
+
+        function updateTimer() {
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                submitExam();
+                return;
+            }
+            timeRemaining--;
+            let m = Math.floor(timeRemaining / 60);
+            let s = timeRemaining % 60;
+            document.getElementById('timer').innerText = `TIME: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function loadQuestion(index) {
+            const qObj = questions[index];
+            document.getElementById('question-progress').innerText = `Q: ${index + 1}/${questions.length}`;
+            document.getElementById('question-text').innerText = qObj.q;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            qObj.options.forEach((opt, i) => {
+                const li = document.createElement('li');
+                li.className = 'option-item';
+                if (userAnswers[index] === i) li.classList.add('selected');
+                
+                li.innerText = opt;
+                li.onclick = () => selectOption(index, i, li);
+                optionsContainer.appendChild(li);
+            });
+
+            if (index === questions.length - 1) {
+                document.getElementById('btn-next').style.display = 'none';
+                document.getElementById('btn-submit').style.display = 'block';
+            } else {
+                document.getElementById('btn-next').style.display = 'block';
+                document.getElementById('btn-submit').style.display = 'none';
+            }
+        }
+
+        function selectOption(qIndex, optIndex, element) {
+            userAnswers[qIndex] = optIndex;
+            const siblings = element.parentElement.children;
+            for (let el of siblings) {
+                el.classList.remove('selected');
+            }
+            element.classList.add('selected');
+        }
+
+        function nextQuestion() {
+            if (userAnswers[currentQuestion] === null) {
+                alert("กรุณาเลือกคำตอบก่อนไปข้อถัดไปครับ");
+                return;
+            }
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                loadQuestion(currentQuestion);
+            }
+        }
+
+        function submitExam() {
+            if (userAnswers.includes(null) && timeRemaining > 0) {
+                if (!confirm("คุณยังทำข้อสอบไม่ครบทุกข้อ ต้องการส่งคำตอบเลยหรือไม่?")) return;
+            }
+
+            clearInterval(timerInterval);
+            isExamActive = false;
+            
+            // ตรวจคะแนนดิบ
+            let rawScore = 0;
+            userAnswers.forEach((ans, i) => {
+                if (ans === questions[i].ans) rawScore++;
+            });
+
+            // คำนวณคะแนนสุทธิหลังหักคะแนนทุจริต
+            score = rawScore - cheatDeductions;
+            if (score < 0) score = 0;
+
+            showScreen('result-screen');
+            
+            document.getElementById('score-display').innerHTML = `
+                คะแนนสุทธิ: ${score} / ${questions.length}<br>
+                <span style="font-size: 1.2rem; color: var(--neon-pink); display: block; margin-top: 15px;">
+                    (ทำได้ ${rawScore} คะแนน, หักจากการทุจริต ${cheatDeductions} คะแนน)
+                </span>
+            `;
+
+            sendDataToGAS(studentName, score);
+        }
+
+        function sendDataToGAS(name, score) {
+            const payload = JSON.stringify({ name: name, score: score });
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: payload
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('saving-status').style.display = 'none';
+                if (data.result === 'success') {
+                    document.getElementById('success-message').style.display = 'block';
+                } else {
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('saving-status').style.display = 'none';
+                document.getElementById('error-message').style.display = 'block';
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
